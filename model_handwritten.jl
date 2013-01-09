@@ -63,9 +63,12 @@ params = [0.1, 0.9, 4, 0.3,  0.96]
 type Model
         controls
         states
+        auxiliaries
         parameters
+        shocks
         g:: Function #(Any, Any, Any , Array{Float64,1})
         f:: Function
+        a:: Function
         params:: Array{Float64,1}
         s_ss
         x_ss
