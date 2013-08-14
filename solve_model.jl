@@ -1,24 +1,11 @@
-load("rbc_model.jl")
-load("decision_rules.jl")
-load("newton.jl")
+require("newton.jl")
 
-smin = [1-0.001, 8]
-smax = [1+0.001, 10]
-orders = [3, 10]
+type Model
+    symbols:: Dict{String,Array{String,1}}
+    functions:: Dict{String,Function}
+    calibration:: Dict{String,Array{Float64,1}}
+end
 
-nodes = zeros( (1,1) ) 
-weights = [1.0]
-
-dr = DecisionRule(smin, smax, orders)
-
-grid = dr.grid
-N = size(grid,1)
-
-s_ss = model["s_ss"]'
-x_ss = model["x_ss"]'
-X_s = [[ 1.25268335 -0.02185392 ;  0.20023482 -0.00591657]];
-
-init = repmat(x_ss, N, 1) + (grid - repmat(s_ss, N, 1) ) * X_s'
 
 type ApproximationSpace
     smin:: Array{Float64, 1}
@@ -27,42 +14,6 @@ type ApproximationSpace
     nodes:: Array{Float64, 2}
     weights:: Array{Float64, 1}
 end
-
-type Model
-        states
-        controls
-        auxiliaries
-        parameters
-        shocks
-        g:: Function #(Any, Any, Any , Array{Float64,1})
-        f:: Function
-        a:: Function
-        params:: Array{Float64,1}
-        s_ss
-        x_ss
-        a_ss
-end
-
-rbc_model = Model(
-        model["states"],
-        model["controls"],
-        model["auxiliaries"],
-        model["parameters"],
-        model["shocks"],
-        model["transition"],
-        model["arbitrage"],
-        model["auxiliary"],
-        model["params"],
-        model["s_ss"],
-        model["x_ss"],
-        model["a_ss"]
-)
-
-
-approx = ApproximationSpace(smin,smax,orders,nodes,weights)
-
-
-
 
 function step_residuals(f, g, aux, s::Array{Float64,2}, x::Array{Float64,2}, p::Array{Float64,1}, dr::DecisionRule, nodes::Array{Float64,2}, weights::Array{Float64,1})
 
@@ -83,14 +34,22 @@ function step_residuals(f, g, aux, s::Array{Float64,2}, x::Array{Float64,2}, p::
 end
 
 
+function solve_model(model::Model, approx::ApproximationSpace, dr::DecisionRule)
 
-function solve_model(model::Model, approx::ApproximationSpace, x0::Array{Float64,2})
+    grid = mlinspace(approx.smin, approx.smax, approx.orders)
+    init = evaluate(dr, grid)
+    dr = solve_model(model, approx, init)
+    return dr
 
-    f = model.f
-    g = model.g
-    a = model.a
+end
+
+function solve_model(model::Model, approx::ApproximationSpace, x0::Array{Float64,2}, verbose=false)
+
+    f = model.functions["arbitrage"]
+    g = model.functions["transition"]
+    a = model.functions["auxiliary"]
     
-    p = model.params
+    p = model.calibration["parameters"]
 
  
     verbose = false
@@ -106,6 +65,7 @@ function solve_model(model::Model, approx::ApproximationSpace, x0::Array{Float64
     it = 0
 
     dr = DecisionRule(smin,smax,orders)
+    grid = dr.grid
 
     print("Starting iterations\n")
     while (err>tol)&&(it<maxit)
@@ -126,14 +86,6 @@ function solve_model(model::Model, approx::ApproximationSpace, x0::Array{Float64
             print("\n")
         end
     end
-
+    println("Finished in ", it, " iterations.")
+    return dr
 end
-
-
-tic()
-solve_model(rbc_model, approx, init)
-toc()
-
-tic()
-solve_model(rbc_model, approx, init)
-toc()

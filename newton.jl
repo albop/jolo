@@ -24,7 +24,7 @@ function serial_solver(fun::Function, x0::Array{Float64,2}, maxit::Int64)
             dres = (fun(xx) - res)/eps
             jac[:,:,i] = dres
         end
-        jac = permute(jac,[2,3,1])
+        jac = permutedims(jac,[2,3,1])
 #        
         
         dx = zeros( size( x0 ) )

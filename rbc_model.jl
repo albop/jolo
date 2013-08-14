@@ -6,10 +6,8 @@ function transition(states_p, controls_p, auxiliary_p, shocks, p)
 
     val = zeros( n, 2 )
     val[:,1] = p[7].*states_p[:,1] + p[8].*(-p[7] + 1) + shocks[:,1]
-    a =  controls_p[:,1]
-    b = states_p[:,2].*(-p[5] + 1)
+    val[:,2] = controls_p[:,1] + states_p[:,2].*(-p[5] + 1)
 
-    val[:,2] = a + b
 
     return val
 
@@ -43,17 +41,34 @@ function auxiliary(states, controls, p)
 end
     
 
+functions = {
+	"transition" => transition,
+	"arbitrage" => arbitrage,
+	"auxiliary" => auxiliary,
+}
+
+steady_state = {
+	"states" => [1.0, 9.35497829015],
+	"controls" => [0.233874457254, 0.33],
+	"auxiliary" => [0.761183686556, 0.035101010101, 2.0202695647],
+}
+
+symbols = {
+	"states" => ["z","k"],
+	"controls" => ["i","n"],
+	"auxiliary" => ["c","rk","w"],
+	"shocks" => ["e_z"],
+	"parameters" => ["beta","sigma","eta","chi","delta","alpha","rho","zbar"],
+}
+
+calibration = {
+    "steady_state" => steady_state,
+    "parameters" => [0.99, 1.0, 1.0, 8.04277481517, 0.025, 0.33, 0.8, 1.0],
+    "covariances" => [[ 0.0015]]
+}
+
 model = {
-    "states" => ["z","k"],
-    "controls" => ["i","n"],
-    "auxiliaries" => ["c","rk","w"],
-    "parameters" => ["beta","sigma","eta","chi","delta","alpha","rho","zbar"],
-    "shocks" => ["e_z"],
-    "transition" => transition,
-    "arbitrage" => arbitrage,
-    "auxiliary" => auxiliary,
-    "params" => [0.99, 1, 1, 8.04277481517292, 0.025, 0.33, 0.8, 1],
-    "s_ss" => [1, 9.35497829014598],
-    "x_ss" => [0.233874457253650, 0.33],
-    "a_ss" => [0.233874457253650, 0.33]
+    "symbols" => symbols,
+    "functions" => functions,
+    "calibration" => calibration
 }
