@@ -1,9 +1,23 @@
-require("newton.jl")
+module jolo
+
+export solve_model, yaml_import,Model
+
+include("decision_rules.jl")
+include("interpolation.jl")
+include("mlininterp.jl")
+include("ndgrid.jl")
+include("newton.jl")
+
+
+export mlinspace, ApproximationSpace, DecisionRule
 
 type Model
-    symbols:: Dict{String,Array{String,1}}
+#    symbols:: Dict{String,Array{String,1}}
+#    functions:: Dict{String,Function}
+#    calibration:: Dict{String,Array{Float64,1}}
+    symbols:: Dict{String,Vector{String}}
     functions:: Dict{String,Function}
-    calibration:: Dict{String,Array{Float64,1}}
+    calibration:: Dict{String,Any}
 end
 
 
@@ -15,9 +29,26 @@ type ApproximationSpace
     weights:: Array{Float64, 1}
 end
 
+function yaml_import( filename::String )
+    
+    command = `dolo-julia $filename.yaml`
+    run(command)
+    
+    path = pwd()
+    txt = string( pwd(), "/$(filename)_model.jl")
+
+    model = evalfile(txt)
+
+    println(model)
+    println(Model)
+    mymodel = Model( model["symbols"], model["functions"], model["calibration"])
+
+    return mymodel
+
+end
+
 function step_residuals(f, g, aux, s::Array{Float64,2}, x::Array{Float64,2}, p::Array{Float64,1}, dr::DecisionRule, nodes::Array{Float64,2}, weights::Array{Float64,1})
 
-   
     n = (size(s, 1))
     res = zeros(size(x))
     a = aux(s,x,p)
@@ -88,4 +119,6 @@ function solve_model(model::Model, approx::ApproximationSpace, x0::Array{Float64
     end
     println("Finished in ", it, " iterations.")
     return dr
+end
+
 end

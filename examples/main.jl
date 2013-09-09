@@ -1,7 +1,4 @@
-require("decision_rules.jl")
-require("yaml_import")
-require("solve_model")
-
+using jolo
 
 ## import the model
 
@@ -39,6 +36,7 @@ dr = DecisionRule(smin,smax,orders,init)
 
 ## solve the model
 
+print(approx)
 
 tic()
 dr = solve_model(model, approx, init)

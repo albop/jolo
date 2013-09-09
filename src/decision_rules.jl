@@ -1,6 +1,6 @@
-require("ndgrid.jl")
-require("mlininterp.jl")
-require("interpolation.jl")
+#require("ndgrid.jl")
+#require("mlininterp.jl")
+#require("interpolation.jl")
 
 
 type DecisionRule
@@ -15,7 +15,7 @@ end
 
 
 function evaluate(dr::DecisionRule, s::Array{Float64,2}) # return type : Array{Float64,2}
-    if length(orders) == 2
+    if length(dr.orders) == 2
         n_x = size(dr.values,2)
         N = size(s,1)
         output = multilinear_interpolation_2d(dr.smin, dr.smax, dr.orders, dr.values, s)
